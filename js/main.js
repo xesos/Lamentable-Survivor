@@ -35,7 +35,7 @@ $( document ).ready(function() {
 
             // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
             // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
-            game.iso.anchor.setTo(0.5, 0.2);
+           // game.iso.anchor.setTo(0.5, 0.2);
         },
         readTiledMap: function(info)
         {
@@ -69,7 +69,8 @@ $( document ).ready(function() {
                         var x = j % width;
                         var y = j / width;
                         Math.floor( y );
-                        game.add.isoSprite(x*76, y*76, 0, ""+layers[i].data[j], 0, isoGroup);
+                        var tile = game.add.isoSprite(x*75, y*75, 0, ""+layers[i].data[j], 0, isoGroup);
+                        tile.anchor.set(1.0,1.0);
                     }
                 }
             }
