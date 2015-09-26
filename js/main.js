@@ -1,3 +1,4 @@
+function setup() {
     var game = new Phaser.Game(800, 800, Phaser.AUTO, 'test', null, true, false);
 
     var BasicGame = function (game) { };
@@ -9,8 +10,6 @@
     var isoGroup, cursorPos;
 
     var cursors;
-
-
 
     function loadFile(url, cb)
     {
@@ -25,8 +24,6 @@
         xmlhttp.send();
     }
 
-
-
     BasicGame.Boot.prototype =
     {
         preload: function () {
@@ -37,35 +34,26 @@
 
             // Add and enable the plug-in.
             game.plugins.add(new Phaser.Plugin.Isometric(game));
-
-            // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
-            // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
-            game.iso.anchor.setTo(0.2, 0.2);
         },
         readTiledMap: function(info)
         {
             mapInfo = info;
-            console.log(JSON.stringify(info));
             var tilesets = info.tilesets;
             for (var i in tilesets)
             {
                 for(var j in tilesets[i].tiles)
                 {
-                    console.log("tileset in j " + j + ", first gid" + tilesets[i].firstgid);
                     var id = parseInt(j) + parseInt(tilesets[i].firstgid);
                     game.load.image(""+id, tilesets[i].tiles[j].image.substring(1));
-                    console.log("loaded texture " + id);
                 }
             }
         },
         create: function () {
-
             // Create a group for our tiles.
             isoGroup = game.add.group();
             var layers = mapInfo.layers;
             for (var i in layers)
             {
-                console.log("layer " + i + " " + JSON.stringify(layers[i].data));
                 if (i == 0)
                 {
                     var width = layers[i].width;
@@ -74,7 +62,8 @@
                         var x = j % width;
                         var y = j / width;
                         Math.floor( y );
-                        game.add.isoSprite(x*76, y*76, 0, ""+layers[i].data[j], 0, isoGroup);
+                        var tile = game.add.isoSprite(x*75, y*75, 0, ""+layers[i].data[j], 0, isoGroup);
+                        tile.anchor.set(1.0,1.0);
                     }
                 }
             }
@@ -82,6 +71,7 @@
             game.world.setBounds(-700, 0, 3000, 2000);
 
             cursors = game.input.keyboard.createCursorKeys();
+
 
             // Provide a 3D position for the cursor
             cursorPos = new Phaser.Plugin.Isometric.Point3();
@@ -130,5 +120,9 @@
         }
     };
 
+    var network = new Network();
+    network.connect();
+
     game.state.add('Boot', BasicGame.Boot);
     game.state.start('Boot');
+};
