@@ -1,66 +1,74 @@
-$( document ).ready(function() {
+function loadFile(url, cb)
+{
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var info = JSON.parse(xmlhttp.responseText);
+            cb(info);
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+}
+
+function setup() {
     var game = new Phaser.Game(800, 800, Phaser.AUTO, 'test', null, true, false);
-
-    var BasicGame = function (game) { };
-
-    BasicGame.Boot = function (game) { };
 
     var mapInfo;
 
-    var isoGroup, cursorPos;
+    var Preload = function(game) {};
 
-    function loadFile(url, cb)
-    {
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                var info = JSON.parse(xmlhttp.responseText);
-                cb(info);
-            }
-        };
-        xmlhttp.open("GET", url, true);
-        xmlhttp.send();
+    Preload.prototype.preload = function()    {
+        game.load.image("loading", "images/loading.png");
+        var this_obj = this;
+        loadFile("map/zombie_city.json",function(info){mapInfo = info; this_obj.updateAndCheck();});
+        game.time.advancedTiming = true;
+
+        // Add and enable the plug-in.
+        game.plugins.add(new Phaser.Plugin.Isometric(game));
+        this.finished_elements = 0;
     }
 
-    BasicGame.Boot.prototype =
+    var cursors;
+
+    Preload.prototype.create = function ()
+    {
+        console.log("Showing image");
+        this.updateAndCheck();
+    }
+
+    Preload.prototype.updateAndCheck = function()
+    {
+        this.finished_elements++;
+        if (this.finished_elements == 2) {
+            game.state.start("Boot");
+        }
+    }
+
+    var Boot = function (game) { };
+
+    var isoGroup, cursorPos;
+
+    Boot.prototype =
     {
         preload: function () {
-            loadFile("map/zombie_city.json", this.readTiledMap);
-            game.load.image('tile', './images/tile.png');
-
-            game.time.advancedTiming = true;
-
-            // Add and enable the plug-in.
-            game.plugins.add(new Phaser.Plugin.Isometric(game));
-
-            // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
-            // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
-            game.iso.anchor.setTo(0.5, 0.2);
-        },
-        readTiledMap: function(info)
-        {
-            mapInfo = info;
-            console.log(JSON.stringify(info));
-            var tilesets = info.tilesets;
+            game.add.sprite(0, 0, 'loading');
+            var tilesets = mapInfo.tilesets;
             for (var i in tilesets)
             {
                 for(var j in tilesets[i].tiles)
                 {
-                    console.log("tileset in j " + j + ", first gid" + tilesets[i].firstgid);
                     var id = parseInt(j) + parseInt(tilesets[i].firstgid);
                     game.load.image(""+id, tilesets[i].tiles[j].image.substring(1));
-                    console.log("loaded texture " + id);
                 }
             }
         },
         create: function () {
-
             // Create a group for our tiles.
             isoGroup = game.add.group();
             var layers = mapInfo.layers;
             for (var i in layers)
             {
-                console.log("layer " + i + " " + JSON.stringify(layers[i].data));
                 if (i == 0)
                 {
                     var width = layers[i].width;
@@ -69,12 +77,15 @@ $( document ).ready(function() {
                         var x = j % width;
                         var y = j / width;
                         Math.floor( y );
-                        game.add.isoSprite(x*76, y*76, 0, ""+layers[i].data[j], 0, isoGroup);
+                        var tile = game.add.isoSprite(x*75, y*75, 0, ""+layers[i].data[j], 0, isoGroup);
+                        tile.anchor.set(1.0,1.0);
                     }
                 }
             }
+            // Let's make a load of tiles on a grid
+            game.world.setBounds(-700, 0, 3000, 2000);
 
-            // Let's make a load of tiles on a grid.
+            cursors = game.input.keyboard.createCursorKeys();
 
 
             // Provide a 3D position for the cursor
@@ -86,6 +97,23 @@ $( document ).ready(function() {
             // determined from the 2D pointer position without extra trickery. By default, the z position is 0 if not set.
             game.iso.unproject(game.input.activePointer.position, cursorPos);
 
+            if (cursors.up.isDown)
+            {
+                game.camera.y -= 4;
+            }
+            else if (cursors.down.isDown)
+            {
+                game.camera.y += 4;
+            }
+
+            if (cursors.left.isDown)
+            {
+                game.camera.x -= 4;
+            }
+            else if (cursors.right.isDown)
+            {
+                game.camera.x += 4;
+            }
             // Loop through all tiles and test to see if the 3D position from above intersects with the automatically generated IsoSprite tile bounds.
             isoGroup.forEach(function (tile) {
                 var inBounds = tile.isoBounds.containsXY(cursorPos.x, cursorPos.y);
@@ -112,6 +140,7 @@ $( document ).ready(function() {
     network.readActions();
     //network.registerAction({action: "Move"});
 
-    game.state.add('Boot', BasicGame.Boot);
-    game.state.start('Boot');
-});
+    game.state.add('Preload', Preload);
+    game.state.add('Boot', Boot);
+    game.state.start('Preload');
+};
