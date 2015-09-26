@@ -109,6 +109,8 @@ $( document ).ready(function() {
 
     var network = new Network();
     network.connect();
+    network.readActions();
+    //network.registerAction({action: "Move"});
 
     game.state.add('Boot', BasicGame.Boot);
     game.state.start('Boot');
