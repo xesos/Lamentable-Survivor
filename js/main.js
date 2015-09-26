@@ -1,44 +1,59 @@
+function loadFile(url, cb)
+{
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var info = JSON.parse(xmlhttp.responseText);
+            cb(info);
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+}
+
 function setup() {
     var game = new Phaser.Game(800, 800, Phaser.AUTO, 'test', null, true, false);
 
-    var BasicGame = function (game) { };
-
-    BasicGame.Boot = function (game) { };
-
     var mapInfo;
 
-    var isoGroup, cursorPos;
+    var Preload = function(game) {};
+
+    Preload.prototype.preload = function()    {
+        game.load.image("loading", "images/loading.png");
+        var this_obj = this;
+        loadFile("map/zombie_city.json",function(info){mapInfo = info; this_obj.updateAndCheck();});
+        game.time.advancedTiming = true;
+
+        // Add and enable the plug-in.
+        game.plugins.add(new Phaser.Plugin.Isometric(game));
+        this.finished_elements = 0;
+    }
 
     var cursors;
 
-    function loadFile(url, cb)
+    Preload.prototype.create = function ()
     {
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                var info = JSON.parse(xmlhttp.responseText);
-                cb(info);
-            }
-        };
-        xmlhttp.open("GET", url, true);
-        xmlhttp.send();
+        console.log("Showing image");
+        this.updateAndCheck();
     }
 
-    BasicGame.Boot.prototype =
+    Preload.prototype.updateAndCheck = function()
+    {
+        this.finished_elements++;
+        if (this.finished_elements == 2) {
+            game.state.start("Boot");
+        }
+    }
+
+    var Boot = function (game) { };
+
+    var isoGroup, cursorPos;
+
+    Boot.prototype =
     {
         preload: function () {
-            loadFile("map/zombie_city.json", this.readTiledMap);
-            game.load.image('tile', './images/tile.png');
-
-            game.time.advancedTiming = true;
-
-            // Add and enable the plug-in.
-            game.plugins.add(new Phaser.Plugin.Isometric(game));
-        },
-        readTiledMap: function(info)
-        {
-            mapInfo = info;
-            var tilesets = info.tilesets;
+            game.add.sprite(0, 0, 'loading');
+            var tilesets = mapInfo.tilesets;
             for (var i in tilesets)
             {
                 for(var j in tilesets[i].tiles)
@@ -123,6 +138,7 @@ function setup() {
     var network = new Network();
     network.connect();
 
-    game.state.add('Boot', BasicGame.Boot);
-    game.state.start('Boot');
+    game.state.add('Preload', Preload);
+    game.state.add('Boot', Boot);
+    game.state.start('Preload');
 };
