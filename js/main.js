@@ -4,11 +4,27 @@ var BasicGame = function (game) { };
 
 BasicGame.Boot = function (game) { };
 
+var mapInfo;
+
 var isoGroup, cursorPos;
+
+function loadFile(url, cb)
+{
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var info = JSON.parse(xmlhttp.responseText);
+            cb(info);
+        }
+    };
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+}
 
 BasicGame.Boot.prototype =
 {
     preload: function () {
+        loadFile("map/zombie_city.json", this.readTiledMap);
         game.load.image('tile', './images/tile.png');
 
         game.time.advancedTiming = true;
@@ -19,16 +35,46 @@ BasicGame.Boot.prototype =
         // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
         // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
         game.iso.anchor.setTo(0.5, 0.2);
-
-
+    },
+    readTiledMap: function(info)
+    {
+        mapInfo = info;
+        console.log(JSON.stringify(info));
+        var tilesets = info.tilesets;
+        for (var i in tilesets)
+        {
+            for(var j in tilesets[i].tiles)
+            {
+                var id = j + tilesets[i].firstgid;
+                game.load.image(""+id, tilesets[i].tiles[j].image.substring(1));
+                console.log("loaded texture " + id);
+            }
+        }
     },
     create: function () {
 
         // Create a group for our tiles.
         isoGroup = game.add.group();
+        var layers = mapInfo.layers;
+        for (var i in layers)
+        {
+            console.log("layer " + i + " " + JSON.stringify(layers[i].data));
+            if (i == 0)
+            {
+                var width = layers[i].width;
+                for (var j in layers[i].data)
+                {
+                    var x = j % width;
+                    var y = j / width;
+                    Math.floor( y );
+                    var tile = game.add.isoSprite(x*76, y*76, 0, ""+layers[i].data[j], 0, isoGroup);
+                    tile.anchor.set(0.5, 0);
+                }
+            }
+        }
 
         // Let's make a load of tiles on a grid.
-        this.spawnTiles();
+
 
         // Provide a 3D position for the cursor
         cursorPos = new Phaser.Plugin.Isometric.Point3();
@@ -57,17 +103,6 @@ BasicGame.Boot.prototype =
     render: function () {
         game.debug.text("Move your mouse around!", 2, 36, "#ffffff");
         game.debug.text(game.time.fps || '--', 2, 14, "#a7aebe");
-    },
-    spawnTiles: function () {
-        var tile;
-        for (var xx = 0; xx < 2560; xx += 76.0) {
-            for (var yy = 0; yy < 2560; yy += 76.0) {
-                // Create a tile using the new game.add.isoSprite factory method at the specified position.
-                // The last parameter is the group you want to add it to (just like game.add.sprite)
-                tile = game.add.isoSprite(xx, yy, 0, 'tile', 0, isoGroup);
-                tile.anchor.set(0.5, 0);
-            }
-        }
     }
 };
 
