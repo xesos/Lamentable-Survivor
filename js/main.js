@@ -45,7 +45,8 @@ BasicGame.Boot.prototype =
         {
             for(var j in tilesets[i].tiles)
             {
-                var id = j + tilesets[i].firstgid;
+                console.log("tileset in j " + j + ", first gid" + tilesets[i].firstgid);
+                var id = parseInt(j) + parseInt(tilesets[i].firstgid);
                 game.load.image(""+id, tilesets[i].tiles[j].image.substring(1));
                 console.log("loaded texture " + id);
             }
@@ -67,8 +68,7 @@ BasicGame.Boot.prototype =
                     var x = j % width;
                     var y = j / width;
                     Math.floor( y );
-                    var tile = game.add.isoSprite(x*76, y*76, 0, ""+layers[i].data[j], 0, isoGroup);
-                    tile.anchor.set(0.5, 0);
+                    game.add.isoSprite(x*76, y*76, 0, ""+layers[i].data[j], 0, isoGroup);
                 }
             }
         }
