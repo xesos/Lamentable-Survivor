@@ -1,4 +1,4 @@
-$( document ).ready(function() {
+function setup() {
     var game = new Phaser.Game(800, 800, Phaser.AUTO, 'test', null, true, false);
 
     var BasicGame = function (game) { };
@@ -32,35 +32,26 @@ $( document ).ready(function() {
 
             // Add and enable the plug-in.
             game.plugins.add(new Phaser.Plugin.Isometric(game));
-
-            // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
-            // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
-           // game.iso.anchor.setTo(0.5, 0.2);
         },
         readTiledMap: function(info)
         {
             mapInfo = info;
-            console.log(JSON.stringify(info));
             var tilesets = info.tilesets;
             for (var i in tilesets)
             {
                 for(var j in tilesets[i].tiles)
                 {
-                    console.log("tileset in j " + j + ", first gid" + tilesets[i].firstgid);
                     var id = parseInt(j) + parseInt(tilesets[i].firstgid);
                     game.load.image(""+id, tilesets[i].tiles[j].image.substring(1));
-                    console.log("loaded texture " + id);
                 }
             }
         },
         create: function () {
-
             // Create a group for our tiles.
             isoGroup = game.add.group();
             var layers = mapInfo.layers;
             for (var i in layers)
             {
-                console.log("layer " + i + " " + JSON.stringify(layers[i].data));
                 if (i == 0)
                 {
                     var width = layers[i].width;
@@ -113,4 +104,4 @@ $( document ).ready(function() {
 
     game.state.add('Boot', BasicGame.Boot);
     game.state.start('Boot');
-});
+};
