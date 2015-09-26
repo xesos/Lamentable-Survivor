@@ -8,6 +8,10 @@ var mapInfo;
 
 var isoGroup, cursorPos;
 
+var cursors;
+
+
+
 function loadFile(url, cb)
 {
     var xmlhttp = new XMLHttpRequest();
@@ -20,6 +24,8 @@ function loadFile(url, cb)
     xmlhttp.open("GET", url, true);
     xmlhttp.send();
 }
+
+
 
 BasicGame.Boot.prototype =
 {
@@ -34,7 +40,7 @@ BasicGame.Boot.prototype =
 
         // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
         // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
-        game.iso.anchor.setTo(0.5, 0.2);
+        game.iso.anchor.setTo(0.2, 0.2);
     },
     readTiledMap: function(info)
     {
@@ -72,9 +78,10 @@ BasicGame.Boot.prototype =
                 }
             }
         }
+        // Let's make a load of tiles on a grid
+        game.world.setBounds(-700, 0, 3000, 2000);
 
-        // Let's make a load of tiles on a grid.
-
+        cursors = game.input.keyboard.createCursorKeys();
 
         // Provide a 3D position for the cursor
         cursorPos = new Phaser.Plugin.Isometric.Point3();
@@ -85,6 +92,23 @@ BasicGame.Boot.prototype =
         // determined from the 2D pointer position without extra trickery. By default, the z position is 0 if not set.
         game.iso.unproject(game.input.activePointer.position, cursorPos);
 
+        if (cursors.up.isDown)
+        {
+            game.camera.y -= 4;
+        }
+        else if (cursors.down.isDown)
+        {
+            game.camera.y += 4;
+        }
+
+        if (cursors.left.isDown)
+        {
+            game.camera.x -= 4;
+        }
+        else if (cursors.right.isDown)
+        {
+            game.camera.x += 4;
+        }
         // Loop through all tiles and test to see if the 3D position from above intersects with the automatically generated IsoSprite tile bounds.
         isoGroup.forEach(function (tile) {
             var inBounds = tile.isoBounds.containsXY(cursorPos.x, cursorPos.y);
