@@ -137,6 +137,8 @@ function setup() {
 
     var network = new Network();
     network.connect();
+    network.readActions();
+    //network.registerAction({action: "Move"});
 
     game.state.add('Preload', Preload);
     game.state.add('Boot', Boot);
