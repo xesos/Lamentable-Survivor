@@ -6,18 +6,31 @@ Network.prototype =
 {
     connect: function () {
 
-        if (!firebase.getAuth()) {
-            //firebase.authWithOAuthRedirect("google", function (error) {
-            firebase.authWithOAuthPopup("google", function (error, authData) {
-                if (error) {
+        //if (!firebase.getAuth()) {
+        //    firebase.authWithOAuthPopup("google", function (error, authData) {
+        //        if (error) {
+        //            console.log("Login Failed!", error);
+        //        } else {
+        //            console.log("Authenticated successfully with payload:");
+        //        }
+        //    });
+        //} else{
+        //    console.log("Authenticated.");
+        //}
+
+        function authDataCallback(authData) {
+            if (!authData) {
+                console.log(authData);
+                firebase.authWithOAuthRedirect("google", function (error) {
                     console.log("Login Failed!", error);
-                } else {
-                    console.log("Authenticated successfully with payload:");
-                }
-            });
-        } else{
-            console.log("Authenticated.");
+                });
+            }
+            else {
+                console.log("Authenticated successfully with payload:", authData);
+            }
         }
+
+        firebase.onAuth(authDataCallback);
     },
 
     readActions: function(action) {
