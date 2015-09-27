@@ -12,6 +12,7 @@ function loadFile(url, cb)
 }
 
 function setup() {
+    var network = new Network();
     var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, 'test', null, true, false);
 
     var mapInfo;
@@ -48,11 +49,16 @@ function setup() {
 
     var Boot = function (game) { };
 
-    var isoGroup, cursorPos;
-
+    var isoGroup;
     Boot.prototype =
     {
+        level_: undefined,
         preload: function () {
+            this.cursors_ = game.input.keyboard.createCursorKeys();
+            this.key_w_ = game.input.keyboard.addKey(Phaser.Keyboard.W);
+            this.key_a_ = game.input.keyboard.addKey(Phaser.Keyboard.A);
+            this.key_s_ = game.input.keyboard.addKey(Phaser.Keyboard.S);
+            this.key_d_ = game.input.keyboard.addKey(Phaser.Keyboard.D);
             game.add.sprite(0, 0, 'loading');
             var tilesets = mapInfo.tilesets;
             game.load.atlasJSONHash('bot', 'images/running_bot.png', 'images/running_bot.json');
@@ -64,6 +70,8 @@ function setup() {
                     game.load.image(""+id, tilesets[i].tiles[j].image.substring(1));
                 }
             }
+
+            this.level_ = new Level(mapInfo.layers[0].data, mapInfo.layers[0].width);
         },
         create: function () {
             // Create a group for our tiles.
@@ -77,60 +85,68 @@ function setup() {
                     for (var j in layers[i].data)
                     {
                         var x = j % width;
-                        var y = j / width;
+                        var y = Math.floor(j / width);
                         Math.floor( y );
-                        var tile = game.add.isoSprite(x*75, y*75, 0, ""+layers[i].data[j], 0, isoGroup);
+                        var tile = game.add.isoSprite(x*71, y*71, 0, ""+layers[i].data[j], 0, isoGroup);
                         tile.anchor.set(0.5,1.0);
                     }
                 }
             }
             // Let's make a load of tiles on a grid
-            game.world.setBounds(-700, 0, 3000, 2000);
-
-            cursors = game.input.keyboard.createCursorKeys();
-
+            game.world.setBounds(-700, -700, 3000, 3000);
 
             // Provide a 3D position for the cursor
-            cursorPos = new Phaser.Plugin.Isometric.Point3();
-            this.bot = game.add.sprite(200, 200, 'bot');
-            this.bot.animations.add('run');
-            this.bot.animations.play('run', 15, true);
+
+            this.character_ = new NPCharacter(network.registerCharacter(), 10, 10, "bot", game);
+            this.level_.addCharacter(this.character_);
         },
         update: function () {
-            // Update the cursor position.
-            // It's important to understand that screen-to-isometric projection means you have to specify a z position manually, as this cannot be easily
-            // determined from the 2D pointer position without extra trickery. By default, the z position is 0 if not set.
-            game.iso.unproject(game.input.activePointer.position, cursorPos);
 
-            if (cursors.up.isDown)
+            if (this.cursors_.up.isDown)
             {
                 game.camera.y -= 4;
             }
-            else if (cursors.down.isDown)
+            else if (this.cursors_.down.isDown)
             {
                 game.camera.y += 4;
             }
 
-            if (cursors.left.isDown)
+            if (this.cursors_.left.isDown)
             {
                 game.camera.x -= 4;
             }
-            else if (cursors.right.isDown)
+            else if (this.cursors_.right.isDown)
             {
                 game.camera.x += 4;
             }
+
+            if (this.key_w_.isDown)
+            {
+                this.character_.addPosition(new Phaser.Point(-3, 0.0));
+            }
+            if (this.key_a_.isDown)
+            {
+                this.character_.addPosition(new Phaser.Point(0.0, 3));
+            }
+            if (this.key_s_.isDown)
+            {
+                this.character_.addPosition(new Phaser.Point(3, 0.0));
+            }
+            if (this.key_d_.isDown)
+            {
+                this.character_.addPosition(new Phaser.Point(0.0, -3));
+            }
+
             var this_obj = this;
             // Loop through all tiles and test to see if the 3D position from above intersects with the automatically generated IsoSprite tile bounds.
             isoGroup.forEach(function (tile) {
-                var cam_mov_y = game.camera.y * Math.cos(2.0943951) - game.camera.x * Math.sin(2.0943951);
-                var cam_mov_x = game.camera.y * Math.sin(2.0943951) + game.camera.x * Math.cos(2.0943951);
-                var inBounds = tile.isoBounds.containsXY(cursorPos.x + cam_mov_x + 120, cursorPos.y + cam_mov_y + 100);
+                var cursorPos = new Phaser.Plugin.Isometric.Point3();
+                game.iso.unproject(game.input.activePointer.position, cursorPos);
+                var inBounds = tile.isoBounds.containsXY(cursorPos.x + 120, cursorPos.y + 100);
                 // If it does, do a little animation and tint change.
                 if (!tile.selected && inBounds) {
                     tile.selected = true;
                     tile.tint = 0x86bfda;
-                    this_obj.bot.x = tile.x - 20;
-                    this_obj.bot.y = tile.y - 120;
                 }
                 // If not, revert back to how it was.
                 else if (tile.selected && !inBounds) {
@@ -145,7 +161,6 @@ function setup() {
         }
     };
 
-    var network = new Network();
     network.connect();
     network.readActions();
     network.registerAction({action: "Move"});
