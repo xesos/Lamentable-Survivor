@@ -40,7 +40,8 @@ Network.prototype =
                 // if counter update succeeds, then create record
                 // probably want a recourse for failures too
                 var value = data.val()
-                ref.child('actions').child(value).set(action, function(error) {
+                action['time'] = Firebase.ServerValue.TIMESTAMP;
+                ref.child('actions').child(value).child(firebase.getAuth().uid).set(action, function(error) {
                     if (error) {
                         alert("Data could not be saved." + error);
                     }
