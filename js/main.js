@@ -12,20 +12,21 @@ function loadFile(url, cb)
 }
 
 function setup() {
-    var game = new Phaser.Game(800, 800, Phaser.AUTO, 'test', null, true, false);
+    var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, 'test', null, true, false);
 
     var mapInfo;
 
     var Preload = function(game) {};
 
     Preload.prototype.preload = function()    {
-        game.load.image("loading", "images/loading.png");
+        game.load.image("loading", "images/loading.jpg");
         var this_obj = this;
         loadFile("map/zombie_city.json",function(info){mapInfo = info; this_obj.updateAndCheck();});
         game.time.advancedTiming = true;
 
         // Add and enable the plug-in.
         game.plugins.add(new Phaser.Plugin.Isometric(game));
+        //game.iso.projectionAngle = 0.4236476090008061;
         this.finished_elements = 0;
     }
 
@@ -54,6 +55,7 @@ function setup() {
         preload: function () {
             game.add.sprite(0, 0, 'loading');
             var tilesets = mapInfo.tilesets;
+            game.load.atlasJSONHash('bot', 'images/running_bot.png', 'images/running_bot.json');
             for (var i in tilesets)
             {
                 for(var j in tilesets[i].tiles)
@@ -78,7 +80,7 @@ function setup() {
                         var y = j / width;
                         Math.floor( y );
                         var tile = game.add.isoSprite(x*75, y*75, 0, ""+layers[i].data[j], 0, isoGroup);
-                        tile.anchor.set(1.0,1.0);
+                        tile.anchor.set(0.5,1.0);
                     }
                 }
             }
@@ -90,6 +92,9 @@ function setup() {
 
             // Provide a 3D position for the cursor
             cursorPos = new Phaser.Plugin.Isometric.Point3();
+            this.bot = game.add.sprite(200, 200, 'bot');
+            this.bot.animations.add('run');
+            this.bot.animations.play('run', 15, true);
         },
         update: function () {
             // Update the cursor position.
@@ -114,13 +119,18 @@ function setup() {
             {
                 game.camera.x += 4;
             }
+            var this_obj = this;
             // Loop through all tiles and test to see if the 3D position from above intersects with the automatically generated IsoSprite tile bounds.
             isoGroup.forEach(function (tile) {
-                var inBounds = tile.isoBounds.containsXY(cursorPos.x, cursorPos.y);
+                var cam_mov_y = game.camera.y * Math.cos(2.0943951) - game.camera.x * Math.sin(2.0943951);
+                var cam_mov_x = game.camera.y * Math.sin(2.0943951) + game.camera.x * Math.cos(2.0943951);
+                var inBounds = tile.isoBounds.containsXY(cursorPos.x + cam_mov_x + 120, cursorPos.y + cam_mov_y + 100);
                 // If it does, do a little animation and tint change.
                 if (!tile.selected && inBounds) {
                     tile.selected = true;
                     tile.tint = 0x86bfda;
+                    this_obj.bot.x = tile.x - 20;
+                    this_obj.bot.y = tile.y - 120;
                 }
                 // If not, revert back to how it was.
                 else if (tile.selected && !inBounds) {
