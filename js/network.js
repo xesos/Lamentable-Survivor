@@ -5,10 +5,11 @@ var Network = function () {
 Network.prototype =
 {
     connect: function () {
+        var this_obj = this;
         function authDataCallback(authData) {
             if (!authData) {
                 console.log(authData);
-                this.firebase_.authWithOAuthRedirect("google", function (error) {
+                this_obj.firebase_.authWithOAuthRedirect("google", function (error) {
                     console.log("Login Failed!", error);
                 });
             }
