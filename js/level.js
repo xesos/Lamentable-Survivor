@@ -1,27 +1,9 @@
-function TileProperty()
-{
-    TileProperty.EntryTypes = {
-        NO_ENTRY : 0,
-        TOP : 1,
-        DOWN : 2,
-        LEFT: 3,
-        RIGHT: 4
-    };
-    this.canWalk = true;
-    this.canEnter = TileProperty.NO_ENTRY;
-}
 
-function Level(map, map_x_size)
+function Level(game)
 {
-    this.map_ = map;
-    this.map_x_size_ = map_x_size;
+    this.game_ = game;
     this.character_list_ = [];
-    this.tile_types_ = {};
-}
-
-Level.prototype.setTileType = function(id, properties)
-{
-    this.tile_types_[id] = properties;
+    this.tile_map_ = {};
 }
 
 Level.prototype.addCharacter = function(character)
@@ -30,10 +12,18 @@ Level.prototype.addCharacter = function(character)
     character.setLevel(this);
 }
 
+Level.prototype.addTile = function(tile)
+{
+    if(this.tile_map_[tile.position().x] == undefined)
+    {
+        this.tile_map_[tile.position().x] = {};
+    }
+    this.tile_map_[tile.position().x][tile.position().y] = tile;
+}
+
 Level.prototype.getElementInMap = function(position)
 {
-    var tile_id = this.map_[position.x + position.y * this.map_x_size_];
-    var ret_tile = this.tile_types_[tile_id];
+    return this.tile_map_[position.x][position.y];
 }
 
 Level.prototype.getCharacterInMap = function(position)
@@ -47,4 +37,31 @@ Level.prototype.getCharacterInMap = function(position)
         }
     }
     return ret;
+}
+
+Level.prototype.getElementFromMousePosition = function(position)
+{
+    var ret;
+    var cursorPos = new Phaser.Plugin.Isometric.Point3();
+    this.game_.iso.unproject(position, cursorPos);
+    for (var i in this.tile_map_)
+    {
+        for (var j in this.tile_map_[i])
+        {
+            if (this.tile_map_[i][j].drawable().isoBounds.containsXY(cursorPos.x + 120, cursorPos.y + 100))
+            {
+                ret = this.tile_map_[i][j];
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
+Level.prototype.update = function()
+{
+    for (var i in this.character_list_)
+    {
+        this.character_list_[i].update();
+    }
 }
