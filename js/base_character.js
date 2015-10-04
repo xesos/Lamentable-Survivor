@@ -73,6 +73,19 @@ BaseSprite.prototype.setLevel = function(level)
     this.level_ = level;
 }
 
+//mixin for creating selectable elements
+function asSelectable() {
+    this.selected_ = false;
+    this.select = function()
+    {
+        this.selected_ = true;
+    }
+    this.unSelect = function()
+    {
+        this.selected_ = false;
+    }
+}
+
 function PCharacter (id, x, y, image, game) {
     BaseSprite.call(this, id, x, y, image, game);
     this.key_w_ = game.input.keyboard.addKey(Phaser.Keyboard.W);
@@ -88,6 +101,8 @@ function PCharacter (id, x, y, image, game) {
 PCharacter.prototype = Object.create(BaseSprite.prototype);
 PCharacter.prototype.constructor = PCharacter;
 
+asSelectable.call(PCharacter.prototype);
+
 PCharacter.prototype.addPosition = function(add)
 {
     this.setPosition(Phaser.Point.add(this.position_, add));
@@ -95,34 +110,32 @@ PCharacter.prototype.addPosition = function(add)
 
 PCharacter.prototype.update = function()
 {
-    var selected = this.level_.getElementFromMousePosition(this.game_.input.activePointer.position);
-    if (selected) {
-        if (this.prev_selected_ !== undefined)
-        {
-            this.prev_selected_.drawable().tint = 0xffffff;
+    if (this.selected_) {
+        var selected = this.level_.getElementInMap(this.level_.getMapPositionFromMouse());
+        if (selected) {
+            if (this.prev_selected_ !== undefined) {
+                this.prev_selected_.drawable().tint = 0xffffff;
+            }
+            this.prev_selected_ = selected;
+            selected.drawable().tint = 0x86bfda;
         }
-        this.prev_selected_ = selected;
-        selected.drawable().tint = 0x86bfda;
-    }
-    if(this.game_.input.activePointer.isDown)
-    {
-        this.setPosition(this.prev_selected_.position());
-    }
-    if (this.key_w_.isDown)
-    {
-        this.addPosition(new Phaser.Point(-0.1, 0.0));
-    }
-    if (this.key_a_.isDown)
-    {
-        this.addPosition(new Phaser.Point(0.0, 0.1));
-    }
-    if (this.key_s_.isDown)
-    {
-        this.addPosition(new Phaser.Point(0.1, 0.0));
-    }
-    if (this.key_d_.isDown)
-    {
-        this.addPosition(new Phaser.Point(0.0, -0.1));
+        if (this.prev_selected_) {
+            if (this.game_.input.activePointer.isDown) {
+                this.setPosition(this.prev_selected_.position());
+            }
+            if (this.key_w_.isDown) {
+                this.addPosition(new Phaser.Point(-0.1, 0.0));
+            }
+            if (this.key_a_.isDown) {
+                this.addPosition(new Phaser.Point(0.0, 0.1));
+            }
+            if (this.key_s_.isDown) {
+                this.addPosition(new Phaser.Point(0.1, 0.0));
+            }
+            if (this.key_d_.isDown) {
+                this.addPosition(new Phaser.Point(0.0, -0.1));
+            }
+        }
     }
 }
 

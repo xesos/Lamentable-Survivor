@@ -27,7 +27,6 @@ function setup() {
 
         // Add and enable the plug-in.
         game.plugins.add(new Phaser.Plugin.Isometric(game));
-        //game.iso.projectionAngle = 0.4236476090008061;
         this.finished_elements = 0;
     }
 
@@ -91,6 +90,7 @@ function setup() {
             // Provide a 3D position for the cursor
 
             this.level_.addCharacter(new PCharacter(network.registerCharacter(), 10, 10, "bot", game));
+            this.level_.addCharacter(new PCharacter(network.registerCharacter(), 15, 15, "bot", game));
         },
         update: function () {
 
