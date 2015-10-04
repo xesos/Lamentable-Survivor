@@ -6,6 +6,11 @@ function Level(game)
     this.tile_map_ = {};
 }
 
+Level.prototype.setup = function()
+{
+    this.cursors_ = this.game_.input.keyboard.createCursorKeys();
+}
+
 Level.prototype.addCharacter = function(character)
 {
     this.character_list_.push(character);
@@ -43,12 +48,14 @@ Level.prototype.getElementFromMousePosition = function(position)
 {
     var ret;
     var cursorPos = new Phaser.Plugin.Isometric.Point3();
-    this.game_.iso.unproject(position, cursorPos);
+    var offset = Phaser.Point.add(Phaser.Point.add(new Phaser.Point(-511, -483), this.game_.camera.position), position);
+    this.game_.iso.unproject(offset, cursorPos);
+    console.log(offset);
     for (var i in this.tile_map_)
     {
         for (var j in this.tile_map_[i])
         {
-            if (this.tile_map_[i][j].drawable().isoBounds.containsXY(cursorPos.x + 120, cursorPos.y + 100))
+            if (this.tile_map_[i][j].drawable().isoBounds.containsXY(cursorPos.x + 120 , cursorPos.y + 100))
             {
                 ret = this.tile_map_[i][j];
                 break;
@@ -60,6 +67,25 @@ Level.prototype.getElementFromMousePosition = function(position)
 
 Level.prototype.update = function()
 {
+
+    if (this.cursors_.up.isDown)
+    {
+        this.game_.camera.y -= 4;
+    }
+    else if (this.cursors_.down.isDown)
+    {
+        this.game_.camera.y += 4;
+    }
+
+    if (this.cursors_.left.isDown)
+    {
+        this.game_.camera.x -= 4;
+    }
+    else if (this.cursors_.right.isDown)
+    {
+        this.game_.camera.x += 4;
+    }
+
     for (var i in this.character_list_)
     {
         this.character_list_[i].update();

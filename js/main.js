@@ -31,8 +31,6 @@ function setup() {
         this.finished_elements = 0;
     }
 
-    var cursors;
-
     Preload.prototype.create = function ()
     {
         console.log("Showing image");
@@ -54,10 +52,11 @@ function setup() {
         level_: new Level(game),
         tile_properties_: {},
         preload: function () {
-            this.cursors_ = game.input.keyboard.createCursorKeys();
             game.add.sprite(0, 0, 'loading');
             var tilesets = mapInfo.tilesets;
             game.load.atlasJSONHash('bot', 'images/running_bot.png', 'images/running_bot.json');
+
+            this.level_.setup();
 
             for (var i in tilesets)
             {
@@ -94,24 +93,6 @@ function setup() {
             this.level_.addCharacter(new PCharacter(network.registerCharacter(), 10, 10, "bot", game));
         },
         update: function () {
-
-            if (this.cursors_.up.isDown)
-            {
-                game.camera.y -= 4;
-            }
-            else if (this.cursors_.down.isDown)
-            {
-                game.camera.y += 4;
-            }
-
-            if (this.cursors_.left.isDown)
-            {
-                game.camera.x -= 4;
-            }
-            else if (this.cursors_.right.isDown)
-            {
-                game.camera.x += 4;
-            }
 
             this.level_.update();
 
